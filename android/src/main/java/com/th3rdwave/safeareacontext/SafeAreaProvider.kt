@@ -13,15 +13,18 @@ class SafeAreaProvider(context: Context?) :
   private var mLastInsets: EdgeInsets? = null
   private var mLastFrame: Rect? = null
 
-  private fun maybeUpdateInsets() {
-    val insetsChangeHandler = mInsetsChangeHandler ?: return
-    val edgeInsets = getSafeAreaInsets(this) ?: return
-    val frame = getFrame(rootView as ViewGroup, this) ?: return
+  private fun maybeUpdateInsets(): Boolean {
+    val insetsChangeHandler = mInsetsChangeHandler ?: return false
+    val edgeInsets = getSafeAreaInsets(this) ?: return false
+    val rootView = rootView as? ViewGroup ?: return false
+    val frame = getFrame(rootView, this) ?: return false
     if (mLastInsets != edgeInsets || mLastFrame != frame) {
       insetsChangeHandler(this, edgeInsets, frame)
       mLastInsets = edgeInsets
       mLastFrame = frame
+      return true
     }
+    return false
   }
 
   override fun onAttachedToWindow() {
@@ -36,8 +39,11 @@ class SafeAreaProvider(context: Context?) :
   }
 
   override fun onPreDraw(): Boolean {
-    maybeUpdateInsets()
-    return true
+    val didUpdate = maybeUpdateInsets()
+    if (didUpdate) {
+      requestLayout()
+    }
+    return !didUpdate
   }
 
   fun setOnInsetsChangeHandler(handler: OnInsetsChangeHandler?) {
