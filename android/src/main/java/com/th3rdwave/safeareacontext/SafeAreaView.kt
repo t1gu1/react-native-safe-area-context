@@ -111,15 +111,13 @@ class SafeAreaView(context: Context?) :
     requestLayout()
   }
 
-  private fun maybeUpdateInsets(): Boolean {
-    val providerView = mProviderView ?: return false
-    val edgeInsets = getSafeAreaInsets(providerView) ?: return false
+  private fun maybeUpdateInsets() {
+    val providerView = mProviderView ?: return
+    val edgeInsets = getSafeAreaInsets(providerView) ?: return
     if (mInsets != edgeInsets) {
       mInsets = edgeInsets
-      updateInsets()
-      return true
+      post { updateInsets() }
     }
-    return false
   }
 
   private fun findProvider(): View {
@@ -146,11 +144,8 @@ class SafeAreaView(context: Context?) :
   }
 
   override fun onPreDraw(): Boolean {
-    val didUpdate = maybeUpdateInsets()
-    if (didUpdate) {
-      requestLayout()
-    }
-    return !didUpdate
+    maybeUpdateInsets()
+    return true
   }
 
   override fun dispatchDraw(canvas: Canvas) {
