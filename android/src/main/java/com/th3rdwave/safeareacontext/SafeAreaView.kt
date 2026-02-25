@@ -148,10 +148,19 @@ class SafeAreaView(context: Context?) :
     return true
   }
 
+  override fun draw(canvas: Canvas) {
+    try {
+      super.draw(canvas)
+    } catch (e: Exception) {
+      // This is a workaround for a React Native bug where the view hierarchy can be inconsistent
+      // during draw.
+    }
+  }
+
   override fun dispatchDraw(canvas: Canvas) {
     try {
       super.dispatchDraw(canvas)
-    } catch (e: IllegalStateException) {
+    } catch (e: Exception) {
       // This is a workaround for a React Native bug where the view hierarchy can be inconsistent
       // during draw.
     }
