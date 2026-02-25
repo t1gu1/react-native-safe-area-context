@@ -1,6 +1,7 @@
 package com.th3rdwave.safeareacontext
 
 import android.content.Context
+import android.graphics.Canvas
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import com.facebook.react.views.view.ReactViewGroup
@@ -19,9 +20,9 @@ class SafeAreaProvider(context: Context?) :
     val rootView = rootView as? ViewGroup ?: return false
     val frame = getFrame(rootView, this) ?: return false
     if (mLastInsets != edgeInsets || mLastFrame != frame) {
-      insetsChangeHandler(this, edgeInsets, frame)
       mLastInsets = edgeInsets
       mLastFrame = frame
+      insetsChangeHandler(this, edgeInsets, frame)
       return true
     }
     return false
@@ -30,7 +31,6 @@ class SafeAreaProvider(context: Context?) :
   override fun onAttachedToWindow() {
     super.onAttachedToWindow()
     viewTreeObserver.addOnPreDrawListener(this)
-    maybeUpdateInsets()
   }
 
   override fun onDetachedFromWindow() {
@@ -46,8 +46,17 @@ class SafeAreaProvider(context: Context?) :
     return !didUpdate
   }
 
+  override fun dispatchDraw(canvas: Canvas) {
+    try {
+      super.dispatchDraw(canvas)
+    } catch (e: IllegalStateException) {
+      // This is a workaround for a React Native bug where the view hierarchy can be inconsistent
+      // during draw.
+    }
+  }
+
   fun setOnInsetsChangeHandler(handler: OnInsetsChangeHandler?) {
     mInsetsChangeHandler = handler
-    maybeUpdateInsets()
+    requestLayout()
   }
 }

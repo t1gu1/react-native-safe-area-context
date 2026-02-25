@@ -1,6 +1,7 @@
 package com.th3rdwave.safeareacontext
 
 import android.content.Context
+import android.graphics.Canvas
 import android.util.Log
 import android.view.View
 import android.view.ViewTreeObserver
@@ -102,12 +103,12 @@ class SafeAreaView(context: Context?) :
 
   fun setMode(mode: SafeAreaViewMode) {
     mMode = mode
-    updateInsets()
+    requestLayout()
   }
 
   fun setEdges(edges: SafeAreaViewEdges) {
     mEdges = edges
-    updateInsets()
+    requestLayout()
   }
 
   private fun maybeUpdateInsets(): Boolean {
@@ -136,7 +137,6 @@ class SafeAreaView(context: Context?) :
     super.onAttachedToWindow()
     mProviderView = findProvider()
     mProviderView?.viewTreeObserver?.addOnPreDrawListener(this)
-    maybeUpdateInsets()
   }
 
   override fun onDetachedFromWindow() {
@@ -151,5 +151,14 @@ class SafeAreaView(context: Context?) :
       requestLayout()
     }
     return !didUpdate
+  }
+
+  override fun dispatchDraw(canvas: Canvas) {
+    try {
+      super.dispatchDraw(canvas)
+    } catch (e: IllegalStateException) {
+      // This is a workaround for a React Native bug where the view hierarchy can be inconsistent
+      // during draw.
+    }
   }
 }
